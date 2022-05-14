@@ -59,6 +59,7 @@ func SignUp() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		fmt.Println(*user.Email)
 
 		validationErr := validate.Struct(user)
 		if validationErr != nil {
@@ -66,7 +67,7 @@ func SignUp() gin.HandlerFunc {
 			return
 		}
 
-		count, err := userCollection.CountDocuments(ctx, bson.M{"email": user.Email})
+		count, err := userCollection.CountDocuments(ctx, bson.M{"email": *user.Email})
 		defer cancel()
 		if err != nil {
 			log.Panic(err)
@@ -74,10 +75,15 @@ func SignUp() gin.HandlerFunc {
 			return
 		}
 
+		if count > 0 {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "This Email or Username already exists."})
+			return
+		}
+
 		password := HashPassword(*user.Password)
 		user.Password = &password
 
-		count, err = userCollection.CountDocuments(ctx, bson.M{"username": user.Username})
+		count, err = userCollection.CountDocuments(ctx, bson.M{"username": *user.Username})
 		defer cancel()
 		if err != nil {
 			log.Panic(err)
@@ -86,7 +92,7 @@ func SignUp() gin.HandlerFunc {
 		}
 
 		if count > 0 {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "this Email or Username already exists"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "This Email or Username already exists."})
 			return
 		}
 
@@ -141,7 +147,7 @@ func Login() gin.HandlerFunc {
 		err := userCollection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&foundUser)
 		defer cancel()
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "login or passowrd is incorrect"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Email or Password is incorrect!"})
 			return
 		}
 

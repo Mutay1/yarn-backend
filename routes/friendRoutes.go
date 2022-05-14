@@ -8,4 +8,7 @@ import (
 //FriendRoutes Function
 func FriendRoutes(incomingRoutes *gin.Engine) {
 	incomingRoutes.GET("/friends", controller.GetFriends())
+	incomingRoutes.POST("/friends/archive", controller.Archive())
+	incomingRoutes.POST("/friends/favorite", controller.Favorite())
+	incomingRoutes.POST("/friends/block", controller.Block())
 }
